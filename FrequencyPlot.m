@@ -1,17 +1,25 @@
 %% clear old data
 clear all; close all; clc
 
-%% Select and open audio file
+%% Select audio file
 [FileName, PathName]= uigetfile('*') ;
 File = [PathName, '\' , FileName];
-[data, fs] = audioread(File);
 
+%% Select types of file for export
+filetypes = {'jpg','emf','fig','png','tif','bmp'};
+
+[pos,~] = listdlg('PromptString','Select output type:',...
+                'ListString',filetypes);
 
 % %%
 % X1 = fftshift( data(:, 1));
 % X2 = fftshift( data(:, 2));
 
 %%
+tic
+
+[data, fs] = audioread(File);
+
 L = length(data);
 NFFT = 2^nextpow2(L); % Next power of 2 from length of y
 
@@ -22,7 +30,8 @@ Y2 = fft(data(:,2),NFFT)/L;
 X2 = fs/2*linspace(0,1,NFFT/2+1);
 
 %% Plot single-sided amplitude spectrum.
-figure
+figure('units','normalized','outerposition',[0 0 1 1], 'Visible', 'off')
+
 subplot(2,1,1)
     loglog(X1,2*abs(Y1(1:NFFT/2+1)))    
     xlabel('Frequency (Hz)')
@@ -42,12 +51,16 @@ subplot(2,1,2)
     grid on
 % title('Single-Sided Amplitude Spectrum of y(t)')
 
-%% Save emf plot in the same location as the music file
-if File(end-3) == '.'
-    saveas(gcf, [ File(1:end-3) , 'emf'])
-elseif File(end-4) == '.'
-     saveas(gcf, [ File(1:end-4) , 'emf'])
-end
+%% Save plot in the same location as the music file
 
+for i = 1:length(pos)
+    if File(end-3) == '.'
+         saveas(gcf, [ File(1:end-3) , filetypes{pos(i)} ])
+    elseif File(end-4) == '.'
+         saveas(gcf, [ File(1:end-4) , filetypes{pos(i)} ])
+    end
+end
 % close graph
 close gcf
+
+toc
